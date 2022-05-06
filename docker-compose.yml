@@ -34,3 +34,12 @@ services:
       - PHP_IDE_CONFIG=serverName=Docker
     links:
       - postgres
+  node:
+    image: node:alpine
+    environment:
+      - YARN_CACHE_FOLDER=/yarn
+    working_dir: /app
+    user: ${UID:-1000}:${GID:-1000}
+    volumes:
+      - ${PWD}:/app
+      - ${HOME}/.yarn:/yarn
