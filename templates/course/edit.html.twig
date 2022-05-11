@@ -3,9 +3,13 @@
 {% block title %}{{ course.CourseName }}{% endblock %}
 
 {% block body %}
+    <div class="container-fluid">
     <h1>{{ course.CourseName }}</h1>
 
     {{ include('course/_form.html.twig', {'button_label': 'Обновить'}) }}
 
+        <div class="line">-----------------------------------------</div>
+
     {{ include('course/_delete_form.html.twig') }}
+    </div>
 {% endblock %}

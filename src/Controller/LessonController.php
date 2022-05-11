@@ -74,6 +74,7 @@ class LessonController extends AbstractController
     {
         $form = $this->createForm(LessonType::class, $lesson);
         $form->handleRequest($request);
+        $course = $lesson->getCourse();
 
         if ($form->isSubmitted() && $form->isValid()) {
             $lessonRepository->add($lesson);
@@ -83,6 +84,7 @@ class LessonController extends AbstractController
         return $this->renderForm('lesson/edit.html.twig', [
             'lesson' => $lesson,
             'form' => $form,
+            'course' => $course,
         ]);
     }
 

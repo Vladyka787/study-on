@@ -3,29 +3,46 @@
 {% block title %}Наши курсы{% endblock %}
 
 {% block body %}
+    <div class="container-fluid">
     <h1>Наши курсы</h1>
 
-    <table class="table">
-        <tbody>
+
+        <div class="row row-cols-2">
         {% for course in courses %}
-            <tr>
-                <td>
-                    <h2>
-                        <a href="{{ path('app_course_show', {'id': course.id}) }}">{{ course.CourseName }}</a>
-                    </h2>
-                </td>
-            </tr>
-            <tr>
-                <td>{{ course.CourseDescription }}</td>
-            </tr>
+{#            <tr>#}
+{#                <td>#}
+{#                    <h4>#}
+{#                        {{ course.CourseName }}#}
+{#                    </h4>#}
+{#                    {{ course.CourseDescription }}#}
+{#                    <h2>#}
+{#                        <a href="{{ path('app_course_show', {'id': course.id}) }}" class="btn btn-outline-primary" role="button">Пройти</a>#}
+{#                    </h2>#}
+{#                </td>#}
+{#            </tr>#}
+
+            <div class="col">
+                <div class="card" style="width: 100%; margin-bottom: 1rem;">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            {{ course.CourseName }}
+                        </h4>
+                        <p class="card-text">
+                            {{ course.CourseDescription }}
+                        </p>
+                        <a href="{{ path('app_course_show', {'id': course.id}) }}" class="btn btn-outline-primary" role="button">Пройти</a>
+                    </div>
+                </div>
+            </div>
+
         {% else %}
         <td colspan="5">no records found</td>
         {% endfor %}
-        </tbody>
-    </table>
+        </div>
 
 
     <div class="line">-----------------------------------------</div>
 
-    <a href="{{ path('app_course_new') }}">Новый курс</a>
+    <a href="{{ path('app_course_new') }}" class="btn btn-outline-secondary" role="button">Новый курс</a>
+    </div>
 {% endblock %}
