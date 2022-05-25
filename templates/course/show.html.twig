@@ -10,7 +10,7 @@
     <h2>Уроки</h2>
 
     {% for lesson in lessons %}
-        <p>
+        <p class="link-lesson">
             <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}">{{ lesson.LessonName }}</a>
         </p>
     {% endfor %}

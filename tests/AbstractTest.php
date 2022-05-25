@@ -32,7 +32,7 @@ abstract class AbstractTest extends WebTestCase
     protected function setUp(): void
     {
         static::getClient();
-        $this->loadFixtures($this->getFixtures());
+        //$this->loadFixtures($this->getFixtures());
     }
 
     final protected function tearDown(): void
