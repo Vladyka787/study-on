@@ -4,34 +4,38 @@
 
 {% block body %}
     <div class="container-fluid">
-    <h1>Наши курсы</h1>
+        <h1>Наши курсы</h1>
 
 
         <div class="row row-cols-2">
-        {% for course in courses %}
+            {% for course in courses %}
 
-            <div class="col">
-                <div class="card" style="width: 100%; margin-bottom: 1rem;">
-                    <div class="card-body">
-                        <h4 class="card-title">
-                            {{ course.CourseName }}
-                        </h4>
-                        <p class="card-text">
-                            {{ course.CourseDescription }}
-                        </p>
-                        <a href="{{ path('app_course_show', {'id': course.id}) }}" class="btn btn-outline-primary" role="button">Пройти</a>
+                <div class="col">
+                    <div class="card" style="width: 100%; margin-bottom: 1rem;">
+                        <div class="card-body">
+                            <h4 class="card-title">
+                                {{ course.CourseName }}
+                            </h4>
+                            <p class="card-text">
+                                {{ course.CourseDescription }}
+                            </p>
+                            <a href="{{ path('app_course_show', {'id': course.id}) }}" class="btn btn-outline-primary"
+                               role="button">Пройти</a>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-        {% else %}
-        <td colspan="5">no records found</td>
-        {% endfor %}
+            {% else %}
+                <td colspan="5">no records found</td>
+            {% endfor %}
         </div>
 
 
-    <div class="line">-----------------------------------------</div>
+        <div class="line">-----------------------------------------</div>
 
-    <a href="{{ path('app_course_new') }}" class="btn btn-outline-secondary" role="button">Новый курс</a>
+        {% if is_granted("ROLE_SUPER_ADMIN") %}
+            <a href="{{ path('app_course_new') }}" class="btn btn-outline-secondary" role="button">Новый курс</a>
+        {% endif %}
+
     </div>
 {% endblock %}

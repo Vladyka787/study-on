@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Регистрация!{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+                {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+
+        <h1 class="h3 mb-3 font-weight-normal">Регистрация</h1>
+
+        {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button class="btn btn-primary" type="submit">{{ button_label|default('Зарегистрироваться') }}</button>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

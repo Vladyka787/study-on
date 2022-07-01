@@ -6,6 +6,7 @@ use App\Entity\Course;
 use App\Form\CourseType;
 use App\Repository\CourseRepository;
 use App\Repository\LessonRepository;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,11 +29,12 @@ class CourseController extends AbstractController
 
     /**
      * @Route("/new", name="app_course_new", methods={"GET", "POST"})
+     * @IsGranted("ROLE_SUPER_ADMIN")
      */
     public function new(Request $request, CourseRepository $courseRepository): Response
     {
         $course = new Course();
-        $course->setCharacterCode(hash('md5',uniqid('',true)));
+        $course->setCharacterCode(hash('md5', uniqid('', true)));
         $form = $this->createForm(CourseType::class, $course);
         $form->handleRequest($request);
 
@@ -62,6 +64,7 @@ class CourseController extends AbstractController
 
     /**
      * @Route("/{id}/edit", name="app_course_edit", methods={"GET", "POST"})
+     * @IsGranted("ROLE_SUPER_ADMIN")
      */
     public function edit(Request $request, Course $course, CourseRepository $courseRepository): Response
     {
@@ -81,10 +84,11 @@ class CourseController extends AbstractController
 
     /**
      * @Route("/{id}", name="app_course_delete", methods={"POST"})
+     * @IsGranted("ROLE_SUPER_ADMIN")
      */
     public function delete(Request $request, Course $course, CourseRepository $courseRepository): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$course->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $course->getId(), $request->request->get('_token'))) {
             $courseRepository->remove($course);
         }
 
