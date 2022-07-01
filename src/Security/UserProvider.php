@@ -30,11 +30,14 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
      */
     public function loadUserByIdentifier($identifier): UserInterface
     {
-        $userData = $this->billingClient->getCurrentUser($identifier);
+//        $userData = $this->billingClient->getCurrentUser($identifier);
+//        $user = new User();
+//        $user->setEmail($userData['username']);
+//        $user->setRoles($userData['roles']);
+//        $user->setApiToken($identifier);
+
         $user = new User();
-        $user->setEmail($userData['username']);
-        $user->setRoles($userData['roles']);
-        $user->setApiToken($identifier);
+        $user->setEmail($identifier);
 
         return $user;
         // Load a User object from your data source or throw UserNotFoundException.

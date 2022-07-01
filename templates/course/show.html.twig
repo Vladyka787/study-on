@@ -3,6 +3,7 @@
 {% block title %}{{ course.CourseName }}{% endblock %}
 
 {% block body %}
+    {{ include('hat.html.twig') }}
     <div class="container-fluid">
         <h1>{{ course.CourseName }}</h1>
         <p>{{ course.CourseDescription }}</p>
