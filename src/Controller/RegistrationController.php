@@ -57,9 +57,9 @@ class RegistrationController extends AbstractController
                 $userData = $billingClient->getCurrentUser($token);
             } catch (\Exception $e) {
                 if ($e instanceof CustomUserMessageAuthenticationException) {
-                    $error = $e->getMessage();
-                } else {
                     $error = 'Сервис временно недоступен. Попробуйте зарегистрироваться позднее';
+                } else {
+                    $error = $e->getMessage();
                 }
                 return $this->renderForm('security/register.html.twig', [
                     'form' => $form,

@@ -54,9 +54,19 @@ class BillingClient
 
         curl_close($cURL_descriptor);
 
+
+        if (array_key_exists('errors', $data)) {
+            throw new BillingUnavailableException('Некорректные данные');
+        }
+
+        if (array_key_exists('errorRepeat', $data)) {
+            throw new BillingUnavailableException('Данный имейл уже зарегистрирован');
+        }
+
         if ($responseCode >= 400) {
             throw new BillingUnavailableException();
         }
+
 
         return $data['token'];
     }
