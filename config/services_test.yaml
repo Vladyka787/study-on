@@ -1,0 +1,3 @@
+services:
+  App\Service\BillingClient:
+    public: true

@@ -3,6 +3,8 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Lesson;
+use App\Security\User;
+use App\Service\BillingClient;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use App\Tests;
 use App\Entity\Course;
@@ -23,7 +25,28 @@ class CourseControllerTest extends Tests\AbstractTest
     public function testCourseIndex(): void
     {
         $client = static::getClient();
+
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken('token');
+
+        $userAdmin = new User();
+        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken('token');
+
+        $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/courses/');
+
+        $newButton = $crawler->filter('body > div > a.btn-outline-secondary');
+        $this->assertEquals(0, $newButton->count());
+
+        $client->loginUser($userAdmin);
+        $crawler = $client->request('GET', LOCAL . '/courses/');
+
+        $newButton = $crawler->filter('body > div > a.btn-outline-secondary');
+        $this->assertEquals(1, $newButton->count());
 
         $this->assertResponseOk();
         //Проверка количества курсов
@@ -38,8 +61,39 @@ class CourseControllerTest extends Tests\AbstractTest
         $courseAll = self::getEntityManager()->getRepository(Course::class)->findAll();
         $courseId = ($courseAll[0])->getId();
 
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken('token');
+
+        $userAdmin = new User();
+        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken('token');
+
         $client = static::getClient();
+
+        $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/courses/' . $courseId);
+
+        $editButton = $crawler->filter('body > div > div > a#edit');
+        $deleteButton = $crawler->filter('body > div > div > div > form > button ');
+        $addButton = $crawler->filter('body > div > div > a#add');
+
+        $this->assertEquals(0, $editButton->count());
+        $this->assertEquals(0, $deleteButton->count());
+        $this->assertEquals(0, $addButton->count());
+
+        $client->loginUser($userAdmin);
+        $crawler = $client->request('GET', LOCAL . '/courses/' . $courseId);
+
+        $editButton = $crawler->filter('body > div > div > a#edit');
+        $deleteButton = $crawler->filter('body > div > div > div > form > button ');
+        $addButton = $crawler->filter('body > div > div > a#add');
+
+        $this->assertEquals(1, $editButton->count());
+        $this->assertEquals(1, $deleteButton->count());
+        $this->assertEquals(1, $addButton->count());
 
         $this->assertResponseOk();
         //Проверка количества уроков
@@ -55,13 +109,30 @@ class CourseControllerTest extends Tests\AbstractTest
         $this->assertResponseNotFound();
     }
 
-    public function testEditCourse()
+    public function testEditCourse(): void
     {
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken('token');
+
+        $userAdmin = new User();
+        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken('token');
+
         $courseAll = self::getEntityManager()->getRepository(Course::class)->findAll();
         $course = $courseAll[0];
         $courseId = $course->getId();
 
         $client = static::getClient();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', LOCAL . '/courses/' . $courseId . '/edit');
+
+        $this->assertResponseCode(403);
+
+        $client->loginUser($userAdmin);
         $crawler = $client->request('GET', LOCAL . '/courses/' . $courseId . '/edit');
 
         $this->assertResponseOk();
@@ -90,7 +161,13 @@ class CourseControllerTest extends Tests\AbstractTest
     //Переходит на страницу курса и видит изменения
     public function testUserEditCourse()
     {
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $user->setApiToken('token');
+
         $client = self::getClient();
+        $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/courses/');
 
         $this->assertResponseOk();
@@ -152,7 +229,24 @@ class CourseControllerTest extends Tests\AbstractTest
 
     public function testCourseNew()
     {
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken('token');
+
+        $userAdmin = new User();
+        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken('token');
+
         $client = self::getClient();
+
+        $client->loginUser($user);
+        $client->request('GET', LOCAL . '/courses/new');
+
+        $this->assertResponseCode(403);
+
+        $client->loginUser($userAdmin);
         $client->request('GET', LOCAL . '/courses/new');
 
         $this->assertResponseOk();

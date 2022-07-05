@@ -3,6 +3,7 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Lesson;
+use App\Security\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use App\Tests;
 use App\Entity\Course;
@@ -17,8 +18,38 @@ class LessonControllerTest extends Tests\AbstractTest
         $lesson = $lessonAll[0];
         $lessonId = $lesson->getId();
 
-        $client = static::getClient();
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken('token');
+
+        $userAdmin = new User();
+        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken('token');
+
+        $client = self::getClient();
         $crawler = $client->request('GET', LOCAL . '/lessons/' . $lessonId);
+        $this->assertResponseRedirect();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', LOCAL . '/lessons/' . $lessonId);
+
+        $editButton = $crawler->filter('body > div > div > a ');
+        $deleteButton=$crawler->filter('body > div > div > form > button');
+
+        $this->assertEquals(0, $editButton->count());
+        $this->assertEquals(0, $deleteButton->count());
+
+        $client->loginUser($userAdmin);
+        $crawler = $client->request('GET', LOCAL . '/lessons/' . $lessonId);
+
+//        var_dump($client->getResponse()->getContent());
+        $editButton=$crawler->filter('body > div > div > a ');
+        $deleteButton=$crawler->filter('body > div > div > form > button');
+
+        $this->assertEquals(1, $editButton->count());
+        $this->assertEquals(1, $deleteButton->count());
 
         $this->assertResponseOk();
 
@@ -32,7 +63,24 @@ class LessonControllerTest extends Tests\AbstractTest
         $lesson = $lessonAll[0];
         $lessonId = $lesson->getId();
 
-        $client = static::getClient();
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken('token');
+
+        $userAdmin = new User();
+        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken('token');
+
+        $client = self::getClient();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', LOCAL . '/lessons/' . $lessonId . '/edit');
+
+        $this->assertResponseCode(403);
+
+        $client->loginUser($userAdmin);
         $crawler = $client->request('GET', LOCAL . '/lessons/' . $lessonId . '/edit');
 
         $this->assertResponseOk();
@@ -57,7 +105,24 @@ class LessonControllerTest extends Tests\AbstractTest
         $course = $courseAll[0];
         $courseId = $course->getId();
 
-        $client = static::getClient();
+        $user = new User();
+        $user->setEmail('userTwo@mail.ru');
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken('token');
+
+        $userAdmin = new User();
+        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken('token');
+
+        $client = self::getClient();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', LOCAL . '/lessons/new?course_id=' . $courseId);
+
+        $this->assertResponseCode(403);
+
+        $client->loginUser($userAdmin);
         $crawler = $client->request('GET', LOCAL . '/lessons/new?course_id=' . $courseId);
 
         $this->assertResponseOk();
