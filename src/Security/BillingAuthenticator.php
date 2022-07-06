@@ -44,20 +44,24 @@ class BillingAuthenticator extends AbstractLoginFormAuthenticator
         $password = $request->request->get('password', '');
 
         try {
-            $token = $this->billingClient->authentication($email, $password);
+            $tokens = $this->billingClient->authentication($email, $password);
         } catch (BillingUnavailableException|\JsonException|CurlException $e) {
             throw new CustomUserMessageAuthenticationException(
                 'Сервис временно недоступен. Попробуйте авторизоваться позднее'
             );
         }
 
-        $loadUser = function ($token): UserInterface {
+        $refreshToken = $tokens['refresh_token'];
+
+        $loadUser = function ($token) use ($refreshToken): UserInterface {
             try {
-                $userData= $this->billingClient->getCurrentUser($token);
+                $userData = $this->billingClient->getCurrentUser($token);
                 $user = new User();
                 $user->setEmail($userData['username']);
                 $user->setRoles($userData['roles']);
                 $user->setApiToken($token);
+                $user->setApiRefreshToken($refreshToken);
+
             } catch (BillingUnavailableException|\JsonException|CurlException $e) {
                 throw new CustomUserMessageAuthenticationException(
                     'Сервис временно недоступен. Попробуйте авторизоваться позднее'
@@ -65,6 +69,8 @@ class BillingAuthenticator extends AbstractLoginFormAuthenticator
             }
             return $user;
         };
+
+        $token = $tokens['token'];
 
         return new SelfValidatingPassport(
             new UserBadge($token, $loadUser),
@@ -82,7 +88,7 @@ class BillingAuthenticator extends AbstractLoginFormAuthenticator
         }
 
         // For example:
-         return new RedirectResponse($this->urlGenerator->generate('app_course_index'));
+        return new RedirectResponse($this->urlGenerator->generate('app_course_index'));
 //        throw new \Exception('TODO: provide a valid redirect inside ' . __FILE__);
     }
 

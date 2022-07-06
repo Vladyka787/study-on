@@ -16,10 +16,24 @@ class TestController extends AbstractController
     public function test(BillingClient $billingClient)
     {
         try {
-            $token = $billingClient->registration('userOne@mail.ru', '22password');
+            $arr = $billingClient->authentication('userOne@mail.ru', 'Password');
         } catch (BillingUnavailableException $e) {
         } catch (\JsonException $e) {
         } catch (CurlException $e) {
+        }
+        $token = 0;
+        $refresh_token = 0;
+        if (array_key_exists('refresh_token', $arr)) {
+            $refresh_token = $arr['refresh_token'];
+        }
+        try {
+            $arr = $billingClient->refreshToken($refresh_token);
+        } catch (BillingUnavailableException $e) {
+        } catch (\JsonException $e) {
+        } catch (CurlException $e) {
+        }
+        if (array_key_exists('token', $arr)) {
+            $token = $arr['token'];
         }
         try {
             $billingClient->getCurrentUser($token);

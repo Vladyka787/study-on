@@ -29,7 +29,8 @@ class RegistrationController extends AbstractController
         BillingAuthenticator       $formAuthenticator,
         BillingClient              $billingClient,
         AuthenticationUtils        $authenticationUtils
-    ): Response {
+    ): Response
+    {
 
         if ($this->isGranted('IS_AUTHENTICATED_FULLY')) {
             return $this->redirectToRoute('app_profile');
@@ -52,7 +53,10 @@ class RegistrationController extends AbstractController
             $password = $form->get('password')->getData();
 
             try {
-                $token = $billingClient->registration($username, $password);
+                $tokens = $billingClient->registration($username, $password);
+
+                $token = $tokens['token'];
+                $refreshToken = $tokens['refresh_token'];
 
                 $userData = $billingClient->getCurrentUser($token);
             } catch (\Exception $e) {
@@ -70,6 +74,7 @@ class RegistrationController extends AbstractController
             $user->setEmail($userData['username']);
             $user->setRoles($userData['roles']);
             $user->setApiToken($token);
+            $user->setApiRefreshToken($refreshToken);
 
             return $authenticator->authenticateUser(
                 $user,

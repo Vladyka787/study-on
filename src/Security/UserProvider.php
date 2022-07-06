@@ -2,6 +2,9 @@
 
 namespace App\Security;
 
+use App\Exception\BillingUnavailableException;
+use App\Service\ServiceJWT;
+use Safe\Exceptions\CurlException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -70,6 +73,22 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
     {
         if (!$user instanceof User) {
             throw new UnsupportedUserException(sprintf('Invalid user class "%s".', get_class($user)));
+        }
+
+        $jwt = new ServiceJWT();
+        $time = $jwt->getEndTime($user->getApiToken());
+
+        if ($jwt->updateCheck($time)) {
+            try {
+                $tokens = $this->billingClient->refreshToken($user->getApiRefreshToken());
+                $user->setApiToken($tokens['token']);
+                $user->setApiRefreshToken($tokens['refresh_token']);
+            } catch (BillingUnavailableException $e) {
+            } catch (\JsonException $e) {
+            } catch (CurlException $e) {
+            }
+
+            return $user;
         }
 
         // Return a User object after making sure its data is "fresh".

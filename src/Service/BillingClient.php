@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationExc
 const URL_REG = "billing.study-on.local/api/v1/register";
 const URL_AUTH = "billing.study-on.local/api/v1/auth";
 const URL_GET_USER = "billing.study-on.local/api/v1/users/current";
+const URL_REFRESH = "billing.study-on.local/api/v1/token/refresh";
 
 //Глянуть и может убрать из composer.json
 //"ext-curl": "*",
@@ -68,17 +69,17 @@ class BillingClient
         }
 
 
-        return $data['token'];
+        return $data;
     }
 
     /**
      * @param string $username
      * @param string $password
-     * @return string
+     * @return mixed
      * @throws JsonException|BillingUnavailableException
      * @throws CurlException
      */
-    public function authentication(string $username, string $password): string
+    public function authentication(string $username, string $password)
     {
         $cURL_descriptor = curl_init(URL_AUTH);
 
@@ -112,7 +113,7 @@ class BillingClient
             throw new BillingUnavailableException();
         }
 
-        return $data['token'];
+        return $data;
     }
 
     /**
@@ -147,6 +148,36 @@ class BillingClient
         if ($responseCode === 401) {
             throw new CustomUserMessageAuthenticationException('Токен JWT с истекшим сроком действия');
         }
+        if ($responseCode >= 400) {
+            throw new BillingUnavailableException();
+        }
+
+        return $data;
+    }
+
+
+    public function refreshToken(string $refreshToken)
+    {
+        $cURL_descriptor = curl_init(URL_REFRESH);
+
+        if ($cURL_descriptor === false) {
+            throw new CurlException();
+        }
+        
+        $array['refresh_token'] = $refreshToken;
+
+        curl_setopt_array($cURL_descriptor, [
+            CURLOPT_POSTFIELDS => $array,
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+
+        $dataJson = curl_exec($cURL_descriptor);
+        $data = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $responseCode = curl_getinfo($cURL_descriptor, CURLINFO_RESPONSE_CODE);
+
+        curl_close($cURL_descriptor);
+
         if ($responseCode >= 400) {
             throw new BillingUnavailableException();
         }
