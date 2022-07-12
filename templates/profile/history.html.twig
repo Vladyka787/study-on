@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}История транзакций{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <h1>История транзакций</h1>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Айди</th>
+                <th>Создана в</th>
+                <th>Тип транзакции</th>
+                <th>Код курса</th>
+                <th>Сумма
+                    <br>(в рублях)
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.id }}</td>
+                    <td>{{ transaction.created_at }}</td>
+                    <td>
+                        {% if(transaction.type == 'deposit') %}
+                            Начисление
+                        {% endif %}
+                        {% if(transaction.type == 'payment') %}
+                            Списание
+                        {% endif %}
+                    </td>
+                    {% if transaction.course_code  is defined %}
+                        <td>
+                            {{ transaction.course_code }}
+                            {% for course in courses %}
+                                {% if(course.characterCode == transaction.course_code) %}
+                                    <br>
+                                    <a href="{{ path('app_course_show', {'id': course.id}) }}">{{ course.courseName }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+                    <td>{{ transaction.amount }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+{% endblock %}

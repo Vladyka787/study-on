@@ -11,6 +11,8 @@ const URL_REG = "billing.study-on.local/api/v1/register";
 const URL_AUTH = "billing.study-on.local/api/v1/auth";
 const URL_GET_USER = "billing.study-on.local/api/v1/users/current";
 const URL_REFRESH = "billing.study-on.local/api/v1/token/refresh";
+const URL_COURSES = "billing.study-on.local/api/v1/courses";
+const URL_TRANSACTIONS = "billing.study-on.local/api/v1/transactions";
 
 //Глянуть и может убрать из composer.json
 //"ext-curl": "*",
@@ -163,11 +165,133 @@ class BillingClient
         if ($cURL_descriptor === false) {
             throw new CurlException();
         }
-        
+
         $array['refresh_token'] = $refreshToken;
 
         curl_setopt_array($cURL_descriptor, [
             CURLOPT_POSTFIELDS => $array,
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+
+        $dataJson = curl_exec($cURL_descriptor);
+        $data = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $responseCode = curl_getinfo($cURL_descriptor, CURLINFO_RESPONSE_CODE);
+
+        curl_close($cURL_descriptor);
+
+        if ($responseCode >= 400) {
+            throw new BillingUnavailableException();
+        }
+
+        return $data;
+    }
+
+    public function getDataAllCourses()
+    {
+        $cURL_descriptor = curl_init(URL_COURSES);
+
+        if ($cURL_descriptor === false) {
+            throw new CurlException();
+        }
+
+        curl_setopt_array($cURL_descriptor, [
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+
+
+        $dataJson = curl_exec($cURL_descriptor);
+        $data = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $responseCode = curl_getinfo($cURL_descriptor, CURLINFO_RESPONSE_CODE);
+
+        curl_close($cURL_descriptor);
+
+        if ($responseCode >= 400) {
+            throw new BillingUnavailableException();
+        }
+
+        return $data;
+    }
+
+    public function getConcreteCourse(string $characterCode)
+    {
+        $cURL_descriptor = curl_init(URL_COURSES . '/' . $characterCode);
+
+        if ($cURL_descriptor === false) {
+            throw new CurlException();
+        }
+
+        curl_setopt_array($cURL_descriptor, [
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+
+        $dataJson = curl_exec($cURL_descriptor);
+        $data = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $responseCode = curl_getinfo($cURL_descriptor, CURLINFO_RESPONSE_CODE);
+
+        curl_close($cURL_descriptor);
+
+        if ($responseCode >= 400) {
+            throw new BillingUnavailableException();
+        }
+
+        return $data;
+    }
+
+    public function payForTheCourse(string $characterCode, string $token)
+    {
+        $cURL_descriptor = curl_init(URL_COURSES . '/' . $characterCode . '/pay');
+
+        if ($cURL_descriptor === false) {
+            throw new CurlException();
+        }
+
+        $parameter = [];
+        $parameter[] = 'Content-Type: application/json';
+        $parameter[] = 'Authorization: Bearer ' . $token;
+
+        curl_setopt_array($cURL_descriptor, [
+            CURLOPT_HTTPHEADER => $parameter,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+        ]);
+
+        $dataJson = curl_exec($cURL_descriptor);
+        $data = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $responseCode = curl_getinfo($cURL_descriptor, CURLINFO_RESPONSE_CODE);
+
+        curl_close($cURL_descriptor);
+
+        if ($responseCode === 406) {
+            return $data;
+        }
+        if ($responseCode >= 400) {
+            throw new BillingUnavailableException();
+        }
+
+        return $data;
+    }
+
+    public function getTransactions(string $token, array $filter = null)
+    {
+        $wrapper = [];
+        $wrapper['filter'] = $filter;
+        $vrem = http_build_query($wrapper);
+        $cURL_descriptor = curl_init(URL_TRANSACTIONS . "?" . $vrem);
+
+        if ($cURL_descriptor === false) {
+            throw new CurlException();
+        }
+
+        $parameter = [];
+        $parameter[] = 'Content-Type: application/json';
+        $parameter[] = 'Authorization: Bearer ' . $token;
+
+        curl_setopt_array($cURL_descriptor, [
+            CURLOPT_HTTPHEADER => $parameter,
             CURLOPT_RETURNTRANSFER => true,
         ]);
 

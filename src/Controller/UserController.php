@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Exception\BillingUnavailableException;
+use App\Repository\CourseRepository;
 use App\Service\BillingClient;
 use Safe\Exceptions\CurlException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +26,26 @@ class UserController extends AbstractController
         }
         return $this->render('profile/index.html.twig', [
             'balance' => $dataUser['balance'],
+        ]);
+    }
+
+    /**
+     * @Route("/profile/history", name="app_profile_history")
+     */
+    public function transactionHistory(
+        BillingClient $billingClient,
+        Security $security,
+        CourseRepository $courseRepository
+    ) {
+        $courses = $courseRepository->findAll();
+        $user = $security->getUser();
+        $token = $user->getApiToken();
+
+        $transactions = $billingClient->getTransactions($token);
+
+        return $this->render('profile/history.html.twig', [
+            'courses' => $courses,
+            'transactions' => $transactions
         ]);
     }
 }

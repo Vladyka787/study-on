@@ -20,6 +20,28 @@
                             <p class="card-text">
                                 {{ course.CourseDescription }}
                             </p>
+                            <p class="card-text">
+                                {% if is_granted("IS_AUTHENTICATED_FULLY") %}
+                                    {% for dataCourse in dataCourses %}
+                                        {% if (course.CharacterCode == dataCourse.code) %}
+                                            {% if (dataCourse.type != 'free') %}
+                                                Цена: {{ dataCourse.price }} руб.
+                                                {% for dataTransaction in dataTransactions %}
+                                                    {% if (course.CharacterCode == dataTransaction.course_code) %}
+                                                        {% if (dataCourse.type == 'buy') %}
+                                                            ( Куплен )
+                                                        {% elseif (dataCourse.type == 'rent') %}
+                                                            {% if dataTransaction.expires_at  is defined %}
+                                                                ( Арендован до {{ dataTransaction.expires_at }} )
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </p>
                             <a href="{{ path('app_course_show', {'id': course.id}) }}" class="btn btn-outline-primary"
                                role="button">Пройти</a>
                         </div>
@@ -30,7 +52,6 @@
                 <td colspan="5">no records found</td>
             {% endfor %}
         </div>
-
 
         <div class="line">-----------------------------------------</div>
 

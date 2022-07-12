@@ -35,6 +35,10 @@ class CourseFixtures extends Fixture
             "Курсы по бегу",
             "Курсы по плаванью",
             "Курсы по прыжкам"];
+        $courseDataCharacterCode=["kursy_po_strizhke",
+            "kursy_po_begu",
+            "kursy_po_plavaniyu",
+            "kursy_po_pryzhkam"];
         $courseDataDescription = ["Вы сможете  стричь не хуже ... (дальше придумайте сами)",
             "100 приемов карате - 99 убегать и 1 прятаться (этому мы не учим)" ,
             "Будьте как рыба в воде",
@@ -82,7 +86,7 @@ class CourseFixtures extends Fixture
 
         for($i=0;$i<=3;$i++){
             $course = new Course();
-            $course->setCharacterCode("UniqueCode " . $i);
+            $course->setCharacterCode($courseDataCharacterCode[$i]);
             $course->setCourseDescription($courseDataDescription[$i]);
             $course->setCourseName($courseDataName[$i]);
             $manager->persist($course);

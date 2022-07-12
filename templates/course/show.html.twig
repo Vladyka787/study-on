@@ -5,6 +5,17 @@
 {% block body %}
     {{ include('hat.html.twig') }}
     <div class="container-fluid">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger">
+                {{ message }}
+            </div>
+        {% endfor %}
         <h1>{{ course.CourseName }}</h1>
         <p>{{ course.CourseDescription }}</p>
 
@@ -31,8 +42,49 @@
                 <a href="{{ path('app_lesson_new', {'course_id': course.id}) }}" class="btn btn-outline-secondary"
                    role="button" style="border-radius: 0.25rem; margin-left: 0.5rem;" id="add">Добавить урок</a>
             {% endif %}
-
+            {% if(dataTransaction == null) %}
+                {% if (dataCourse.type != 'free') %}
+                    <button data-bs-toggle="modal" data-bs-target="#write-offWarning" class="btn btn-outline-success"
+                            role="button" style="border-radius: 0.25rem; margin-left: 0.5rem;"
+                            {% if(canBuy) %}
+                            {% else %}
+                                disabled="disabled"
+                            {% endif %}
+                    >
+                        {% if(dataCourse.type == 'buy') %}
+                            Купить
+                        {% endif %}
+                        {% if(dataCourse.type == 'rent') %}
+                            Арендовать
+                        {% endif %}
+                    </button>
+                {% endif %}
+            {% endif %}
         </div>
-
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="write-offWarning" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Внимание</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if dataCourse.price  is defined %}
+                        С вашего счета будет списано {{ dataCourse.price }} рублей. Продолжить?
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <a href="{{ path('app_course_buy', {'id': course.id}) }}" type="button"
+                       class="btn btn-primary">Продложить
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
