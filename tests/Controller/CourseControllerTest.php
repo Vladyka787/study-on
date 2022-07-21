@@ -4,10 +4,16 @@ namespace App\Tests\Controller;
 
 use App\Entity\Lesson;
 use App\Security\User;
-use App\Service\BillingClient;
+use App\Tests\Mock\BillingClientMock;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use App\Tests;
 use App\Entity\Course;
+use const App\Tests\Mock\REFRESH_TOKEN_ADMIN;
+use const App\Tests\Mock\REFRESH_TOKEN_NEW_USER;
+use const App\Tests\Mock\REFRESH_TOKEN_USER;
+use const App\Tests\Mock\USERNAME_ADMIN;
+use const App\Tests\Mock\USERNAME_NEW_USER;
+use const App\Tests\Mock\USERNAME_USER;
 
 define('LOCAL', 'http://study-on.local:81');
 
@@ -26,18 +32,31 @@ class CourseControllerTest extends Tests\AbstractTest
     {
         $client = static::getClient();
 
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
         $user = new User();
-        $user->setEmail('userTwo@mail.ru');
+        $user->setEmail(USERNAME_USER);
         $user->setRoles(['ROLE_USER']);
-        $user->setApiToken('token');
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
 
         $userAdmin = new User();
-        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setEmail(USERNAME_ADMIN);
         $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $userAdmin->setApiToken('token');
+        $userAdmin->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $userAdmin->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
 
         $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/courses/');
+
+//        print $crawler->html();
 
         $newButton = $crawler->filter('body > div > a.btn-outline-secondary');
         $this->assertEquals(0, $newButton->count());
@@ -61,17 +80,28 @@ class CourseControllerTest extends Tests\AbstractTest
         $courseAll = self::getEntityManager()->getRepository(Course::class)->findAll();
         $courseId = ($courseAll[0])->getId();
 
+        $client = static::getClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
         $user = new User();
-        $user->setEmail('userTwo@mail.ru');
+        $user->setEmail(USERNAME_USER);
         $user->setRoles(['ROLE_USER']);
-        $user->setApiToken('token');
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
 
         $userAdmin = new User();
-        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setEmail(USERNAME_ADMIN);
         $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $userAdmin->setApiToken('token');
-
-        $client = static::getClient();
+        $userAdmin->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $userAdmin->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
 
         $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/courses/' . $courseId);
@@ -111,21 +141,32 @@ class CourseControllerTest extends Tests\AbstractTest
 
     public function testEditCourse(): void
     {
-        $user = new User();
-        $user->setEmail('userTwo@mail.ru');
-        $user->setRoles(['ROLE_USER']);
-        $user->setApiToken('token');
-
-        $userAdmin = new User();
-        $userAdmin->setEmail('userTwo@mail.ru');
-        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $userAdmin->setApiToken('token');
-
         $courseAll = self::getEntityManager()->getRepository(Course::class)->findAll();
         $course = $courseAll[0];
         $courseId = $course->getId();
 
         $client = static::getClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
+        $user = new User();
+        $user->setEmail(USERNAME_USER);
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
+
+        $userAdmin = new User();
+        $userAdmin->setEmail(USERNAME_ADMIN);
+        $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $userAdmin->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $userAdmin->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
 
         $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/courses/' . $courseId . '/edit');
@@ -161,12 +202,23 @@ class CourseControllerTest extends Tests\AbstractTest
     //Переходит на страницу курса и видит изменения
     public function testUserEditCourse()
     {
-        $user = new User();
-        $user->setEmail('userTwo@mail.ru');
-        $user->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $user->setApiToken('token');
+        $client = static::getClient();
 
-        $client = self::getClient();
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
+        $user = new User();
+        $user->setEmail(USERNAME_ADMIN);
+        $user->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
+        $user->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $user->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
+
         $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/courses/');
 
@@ -195,11 +247,10 @@ class CourseControllerTest extends Tests\AbstractTest
 
         $client->click($link->link());
         $crawler = $client->getCrawler();
-//        print $crawler->html();
         $this->assertResponseOk();
 
         $form = $crawler->filter('form')->form();
-//        print $form;
+
         $courseNameInForm = $form->get('course[CourseName]')->getValue() . " Отредактированно";
         $courseDescriptionInForm = $form->get('course[CourseDescription]')->getValue() . " Отредактированно";
 
@@ -210,7 +261,6 @@ class CourseControllerTest extends Tests\AbstractTest
 
         $client->followRedirect();
         $crawler = $client->getCrawler();
-//        print $crawler->html();
 
         $this->assertResponseOk();
 
@@ -220,26 +270,34 @@ class CourseControllerTest extends Tests\AbstractTest
         $courseNameNew = $cardBody->filter('h4[class="card-title"]')->text();
         $courseDescriptionNew = $cardBody->filter('p[class="card-text"]')->text();
 
-//        print $courseNameOld . " Отредактированно";
-//        print $courseNameNew;
-
         $this->assertEquals($courseNameOld . " Отредактированно", $courseNameNew);
         $this->assertEquals($courseDescriptionOld . " Отредактированно", $courseDescriptionNew);
     }
 
     public function testCourseNew()
     {
+        $client = static::getClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
         $user = new User();
-        $user->setEmail('userTwo@mail.ru');
+        $user->setEmail(USERNAME_USER);
         $user->setRoles(['ROLE_USER']);
-        $user->setApiToken('token');
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
 
         $userAdmin = new User();
-        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setEmail(USERNAME_ADMIN);
         $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $userAdmin->setApiToken('token');
-
-        $client = self::getClient();
+        $userAdmin->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $userAdmin->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
 
         $client->loginUser($user);
         $client->request('GET', LOCAL . '/courses/new');
@@ -258,5 +316,89 @@ class CourseControllerTest extends Tests\AbstractTest
         $this->assertTrue($form->has('course[CharacterCode]'));
         $this->assertTrue($form->has('course[CourseName]'));
         $this->assertTrue($form->has('course[CourseDescription]'));
+    }
+
+    public function testPrintPriceAndRentEndAndRentBeginCourse()
+    {
+        $client = static::GetClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
+        $user = new User();
+        $user->setEmail(USERNAME_USER);
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', LOCAL . '/courses/');
+        $this->assertResponseOk();
+
+        $block = $crawler->filter('body > div > div > div');
+
+        $line = $block->filter('p');
+
+        $str = $line->nextAll()->text();
+
+        $chislo = preg_match("/Цена:.+\( Арендован до /u", $str);
+
+        $this->assertEquals(1, $chislo);
+
+        $block = $block->nextAll()->nextAll()->nextAll();
+
+        $line = $block->filter('p');
+
+        $str = $line->nextAll()->text();
+
+        $chislo = preg_match("/Цена:.+\( Арендован до /u", $str);
+
+        $this->assertEquals(0, $chislo);
+    }
+
+    public function testPresenseButtonBuy()
+    {
+        $client = static::GetClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
+        $user = new User();
+        $user->setEmail(USERNAME_USER);
+        $user->setRoles(['ROLE_USER']);
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', LOCAL . '/courses/');
+        $this->assertResponseOk();
+
+        $block = $crawler->filter('body > div > div > div');
+
+        $link = $block->nextAll()->filter('a')->link();
+
+        $crawler = $client->click($link);
+
+        print $crawler->html();
+
+        $buttonBuy = $crawler->filter('body > div > div > button');
+
+        $this->assertEquals('Купить', $buttonBuy->text());
+
+        $client->clickLink('Техника дельфина');
+
+        $this->assertResponseCode(403);
     }
 }

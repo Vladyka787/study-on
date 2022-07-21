@@ -4,9 +4,14 @@ namespace App\Tests\Controller;
 
 use App\Entity\Lesson;
 use App\Security\User;
+use App\Tests\Mock\BillingClientMock;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use App\Tests;
 use App\Entity\Course;
+use const App\Tests\Mock\REFRESH_TOKEN_ADMIN;
+use const App\Tests\Mock\REFRESH_TOKEN_USER;
+use const App\Tests\Mock\USERNAME_ADMIN;
+use const App\Tests\Mock\USERNAME_USER;
 
 define('LOCAL', 'http://study-on.local:81');
 
@@ -18,17 +23,29 @@ class LessonControllerTest extends Tests\AbstractTest
         $lesson = $lessonAll[0];
         $lessonId = $lesson->getId();
 
+        $client = static::getClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
         $user = new User();
-        $user->setEmail('userTwo@mail.ru');
+        $user->setEmail(USERNAME_USER);
         $user->setRoles(['ROLE_USER']);
-        $user->setApiToken('token');
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
 
         $userAdmin = new User();
-        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setEmail(USERNAME_ADMIN);
         $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $userAdmin->setApiToken('token');
+        $userAdmin->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $userAdmin->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
 
-        $client = self::getClient();
         $crawler = $client->request('GET', LOCAL . '/lessons/' . $lessonId);
         $this->assertResponseRedirect();
 
@@ -63,17 +80,28 @@ class LessonControllerTest extends Tests\AbstractTest
         $lesson = $lessonAll[0];
         $lessonId = $lesson->getId();
 
+        $client = static::getClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
         $user = new User();
-        $user->setEmail('userTwo@mail.ru');
+        $user->setEmail(USERNAME_USER);
         $user->setRoles(['ROLE_USER']);
-        $user->setApiToken('token');
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
 
         $userAdmin = new User();
-        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setEmail(USERNAME_ADMIN);
         $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $userAdmin->setApiToken('token');
-
-        $client = self::getClient();
+        $userAdmin->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $userAdmin->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
 
         $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/lessons/' . $lessonId . '/edit');
@@ -105,17 +133,28 @@ class LessonControllerTest extends Tests\AbstractTest
         $course = $courseAll[0];
         $courseId = $course->getId();
 
+        $client = static::getClient();
+
+        $client->disableReboot();
+
+        static::getContainer()->set(
+            'App\Service\BillingClient',
+            new BillingClientMock()
+        );
+
+        $service = new Tests\Service\GenerateJWTFromTests();
+
         $user = new User();
-        $user->setEmail('userTwo@mail.ru');
+        $user->setEmail(USERNAME_USER);
         $user->setRoles(['ROLE_USER']);
-        $user->setApiToken('token');
+        $user->setApiToken($service->generateJWT(USERNAME_USER));
+        $user->setApiRefreshToken(REFRESH_TOKEN_USER);
 
         $userAdmin = new User();
-        $userAdmin->setEmail('userTwo@mail.ru');
+        $userAdmin->setEmail(USERNAME_ADMIN);
         $userAdmin->setRoles(['ROLE_SUPER_ADMIN', 'ROLE_USER']);
-        $userAdmin->setApiToken('token');
-
-        $client = self::getClient();
+        $userAdmin->setApiToken($service->generateJWT(USERNAME_ADMIN));
+        $userAdmin->setApiRefreshToken(REFRESH_TOKEN_ADMIN);
 
         $client->loginUser($user);
         $crawler = $client->request('GET', LOCAL . '/lessons/new?course_id=' . $courseId);

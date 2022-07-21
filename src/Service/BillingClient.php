@@ -279,8 +279,8 @@ class BillingClient
     {
         $wrapper = [];
         $wrapper['filter'] = $filter;
-        $vrem = http_build_query($wrapper);
-        $cURL_descriptor = curl_init(URL_TRANSACTIONS . "?" . $vrem);
+        $arr = http_build_query($wrapper);
+        $cURL_descriptor = curl_init(URL_TRANSACTIONS . "?" . $arr);
 
         if ($cURL_descriptor === false) {
             throw new CurlException();

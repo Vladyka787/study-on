@@ -79,10 +79,16 @@ class LessonController extends AbstractController
 
         $courseData = $billingClient->getConcreteCourse($course->getCharacterCode());
 
-        if (($result === []) && ($courseData['type'] !== 'free')) {
-            throw new AccessDeniedException('Отказано в доступе');
-        }
+        $roles = $user->getRoles();
 
+//        Проверяет пользователь или админ пытаются получить доступ к просмотру уроков.
+//        Админ получает доступ к урокам, даже если он их не оплатил
+//        Чтобы это поправить надо просто удалить внешний if
+        if (!in_array('ROLE_SUPER_ADMIN', $roles)) {
+            if (($result === []) && ($courseData['type'] !== 'free')) {
+                throw new AccessDeniedException('Отказано в доступе');
+            }
+        }
         return $this->render('lesson/show.html.twig', [
             'lesson' => $lesson,
             'course' => $course,
