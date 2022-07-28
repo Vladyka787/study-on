@@ -16,43 +16,22 @@ class TestController extends AbstractController
      */
     public function test(BillingClient $billingClient): Response
     {
+        $tokens = $billingClient->authentication('userTwo@mail.ru', 'SuperPassword');
+
+        $token = $tokens['token'];
+        $characterCode = 'kursy_po_strizhke';
+        $array = [
+            'type' => 'rent',
+            'title' => 'Курс со StudyOn',
+            'code' => 'new_course',
+            'price' => 500.99,
+        ];
+
         try {
-            $arr = $billingClient->authentication('userOne@mail.ru', 'Password');
+            $data = $billingClient->editCourse($token, $characterCode, $array);
         } catch (BillingUnavailableException $e) {
         } catch (\JsonException $e) {
         } catch (CurlException $e) {
-        }
-//        $token = 0;
-//        $refresh_token = 0;
-//        if (array_key_exists('refresh_token', $arr)) {
-//            $refresh_token = $arr['refresh_token'];
-//        }
-//        try {
-//            $arr = $billingClient->refreshToken($refresh_token);
-//        } catch (BillingUnavailableException $e) {
-//        } catch (\JsonException $e) {
-//        } catch (CurlException $e) {
-//        }
-//        if (array_key_exists('token', $arr)) {
-//            $token = $arr['token'];
-//        }
-//        try {
-//            $billingClient->getCurrentUser($token);
-//        } catch (BillingUnavailableException $e) {
-//        } catch (\JsonException $e) {
-//        } catch (CurlException $e) {
-//        }
-
-        $str = 'kursy_po_strizhke';
-
-        $filter = [];
-        $filter['type'] = 'payment';
-        $filter['course_code'] = 'kursy_po_strizhke';
-        $filter['skip_expired'] = true;
-
-        try {
-            $data = $billingClient->getTransactions($arr['token'], $filter);
-        } catch (BillingUnavailableException|\JsonException|CurlException $e) {
         }
 
         return new Response();

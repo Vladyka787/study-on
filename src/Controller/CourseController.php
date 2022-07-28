@@ -11,6 +11,7 @@ use App\Service\BillingClient;
 use Safe\Exceptions\CurlException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -70,16 +71,71 @@ class CourseController extends AbstractController
      * @Route("/new", name="app_course_new", methods={"GET", "POST"})
      * @IsGranted("ROLE_SUPER_ADMIN")
      */
-    public function new(Request $request, CourseRepository $courseRepository): Response
+    public function new(
+        Request          $request,
+        CourseRepository $courseRepository,
+        BillingClient    $billingClient,
+        Security         $security
+    ): Response
     {
         $course = new Course();
-        $course->setCharacterCode(hash('md5', uniqid('', true)));
         $form = $this->createForm(CourseType::class, $course);
         $form->handleRequest($request);
 
+        $checkForSpace = $form->get('CharacterCode')->getData();
+
+        for ($i = 0, $iMax = strlen($checkForSpace); $i < $iMax; $i++) {
+            if ($checkForSpace[$i] == ' ') {
+                $form->get('CharacterCode')->addError(new FormError('Буквенный код не должен содержать пробелов.'));
+                $form->get('CharacterCode')->isValid(false);
+                break;
+            }
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
-            $courseRepository->add($course);
-            return $this->redirectToRoute('app_course_index', [], Response::HTTP_SEE_OTHER);
+            $user = $security->getUser();
+            $token = $user->getApiToken();
+
+            $type = $form->get('Type')->getData();
+            $title = $form->get('CourseName')->getData();
+            $code = $form->get('CharacterCode')->getData();
+            $price = $form->get('Price')->getData();
+
+            $dataCreateCourse = [];
+
+            $dataCreateCourse ['title'] = $title;
+            $dataCreateCourse ['code'] = $code;
+            $dataCreateCourse ['price'] = $price;
+            if ($price == 0) {
+                $dataCreateCourse['type'] = 'free';
+                $dataCreateCourse ['price'] = null;
+            } elseif ($type == 'full') {
+                $dataCreateCourse ['type'] = 'buy';
+            } elseif ($type == 'rent') {
+                $dataCreateCourse ['type'] = 'rent';
+            }
+
+            $exam = $courseRepository->findBy(['CharacterCode' => $code]);
+
+            if ($exam == []) {
+                try {
+                    $result = $billingClient->createCourse($token, $dataCreateCourse);
+                } catch (BillingUnavailableException $e) {
+                } catch (\JsonException $e) {
+                } catch (CurlException $e) {
+                }
+
+                if ($result['success']) {
+                    $course->setCharacterCode($code);
+                    $courseRepository->add($course);
+                    return $this->redirectToRoute('app_course_index', [], Response::HTTP_SEE_OTHER);
+                }
+            }
+            else
+            {
+                $form->get('CharacterCode')->addError(new FormError('Код курса должен быть уникальным.'));
+                $form->get('CharacterCode')->isValid(false);
+            }
         }
 
         return $this->renderForm('course/new.html.twig', [
@@ -141,9 +197,7 @@ class CourseController extends AbstractController
      * @Route("/{id}/buy", name="app_course_buy", methods={"GET"})
      * @IsGranted("ROLE_USER")
      */
-    public
-    function buy
-    (
+    public function buy(
         Course        $course,
         BillingClient $billingClient,
         Security      $security
@@ -167,15 +221,75 @@ class CourseController extends AbstractController
      * @Route("/{id}/edit", name="app_course_edit", methods={"GET", "POST"})
      * @IsGranted("ROLE_SUPER_ADMIN")
      */
-    public
-    function edit(Request $request, Course $course, CourseRepository $courseRepository): Response
+    public function edit(
+        Request          $request,
+        Course           $course,
+        CourseRepository $courseRepository,
+        BillingClient    $billingClient,
+        Security         $security
+    ): Response
     {
-        $form = $this->createForm(CourseType::class, $course);
+        $data = $billingClient->getConcreteCourse($course->getCharacterCode());
+
+        $oldCharacterCode = $course->getCharacterCode();
+
+        $type = $data['type'];
+        $price = null;
+        if (array_key_exists('price', $data)) {
+            $price = $data['price'];
+        }
+        $form = $this->createForm(CourseType::class, $course, ['type' => $type, 'price' => $price]);
         $form->handleRequest($request);
 
+        $checkForSpace = $form->get('CharacterCode')->getData();
+
+        for ($i = 0, $iMax = strlen($checkForSpace); $i < $iMax; $i++) {
+            if ($checkForSpace[$i] == ' ') {
+                $form->get('CharacterCode')->addError(new FormError('Буквенный код не должен содержать пробелов.'));
+                $form->get('CharacterCode')->isValid(false);
+                break;
+            }
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
-            $courseRepository->add($course);
-            return $this->redirectToRoute('app_course_index', [], Response::HTTP_SEE_OTHER);
+            $user = $security->getUser();
+            $token = $user->getApiToken();
+
+            $type = $form->get('Type')->getData();
+            $title = $form->get('CourseName')->getData();
+            $code = $form->get('CharacterCode')->getData();
+            $price = $form->get('Price')->getData();
+
+            $dataEditCourse = [];
+
+            $dataEditCourse ['title'] = $title;
+            $dataEditCourse ['code'] = $code;
+            $dataEditCourse ['price'] = $price;
+            if ($price == 0) {
+                $dataEditCourse['type'] = 'free';
+                $dataEditCourse ['price'] = null;
+            } elseif ($type == 'full') {
+                $dataEditCourse ['type'] = 'buy';
+            } elseif ($type == 'rent') {
+                $dataEditCourse ['type'] = 'rent';
+            }
+
+            $exam = $courseRepository->findBy(['CharacterCode' => $code]);
+
+            if (($exam == []) || ($oldCharacterCode == $code)) {
+                try {
+                    $result = $billingClient->editCourse($token, $oldCharacterCode, $dataEditCourse);
+                } catch (BillingUnavailableException $e) {
+                } catch (\JsonException $e) {
+                } catch (CurlException $e) {
+                }
+
+                if ($result['success']) {
+                    $course->setCharacterCode($code);
+                    $courseRepository->add($course);
+                    return $this->redirectToRoute('app_course_index', [], Response::HTTP_SEE_OTHER);
+                }
+            }
         }
 
         return $this->renderForm('course/edit.html.twig', [
@@ -188,8 +302,7 @@ class CourseController extends AbstractController
      * @Route("/{id}", name="app_course_delete", methods={"POST"})
      * @IsGranted("ROLE_SUPER_ADMIN")
      */
-    public
-    function delete(Request $request, Course $course, CourseRepository $courseRepository): Response
+    public function delete(Request $request, Course $course, CourseRepository $courseRepository): Response
     {
         if ($this->isCsrfTokenValid('delete' . $course->getId(), $request->request->get('_token'))) {
             $courseRepository->remove($course);

@@ -239,7 +239,9 @@ class CourseControllerTest extends Tests\AbstractTest
 
         $client->click($link->link());
         $crawler = $client->getCrawler();
+
 //        print $crawler->html();
+
         $this->assertResponseOk();
 
         $href = "/courses/" . $courseId . "/edit";
@@ -257,6 +259,7 @@ class CourseControllerTest extends Tests\AbstractTest
         $client->submit($form, [
             'course[CourseName]' => $courseNameInForm,
             'course[CourseDescription]' => $courseDescriptionInForm,
+            'course[CharacterCode]' => 'edit_test_course',
         ]);
 
         $client->followRedirect();
@@ -316,6 +319,10 @@ class CourseControllerTest extends Tests\AbstractTest
         $this->assertTrue($form->has('course[CharacterCode]'));
         $this->assertTrue($form->has('course[CourseName]'));
         $this->assertTrue($form->has('course[CourseDescription]'));
+        $this->assertTrue($form->has('course[Type]'));
+        $this->assertTrue($form->has('course[Price]'));
+
+        
     }
 
     public function testPrintPriceAndRentEndAndRentBeginCourse()
@@ -391,7 +398,7 @@ class CourseControllerTest extends Tests\AbstractTest
 
         $crawler = $client->click($link);
 
-        print $crawler->html();
+//        print $crawler->html();
 
         $buttonBuy = $crawler->filter('body > div > div > button');
 

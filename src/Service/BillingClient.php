@@ -308,4 +308,76 @@ class BillingClient
 
         return $data;
     }
+
+    public function editCourse(string $token, string $characterCode, array $dataEditCourse)
+    {
+        $cURL_descriptor = curl_init(URL_COURSES . '/' . $characterCode);
+
+        if ($cURL_descriptor === false) {
+            throw new CurlException();
+        }
+
+        $parameter = [];
+        $parameter[] = 'Content-Type: application/json';
+        $parameter[] = 'Authorization: Bearer ' . $token;
+
+        $json = $dataEditCourse;
+
+        $jsonString = json_encode($json, JSON_THROW_ON_ERROR);
+
+        curl_setopt_array($cURL_descriptor, [
+            CURLOPT_HTTPHEADER => $parameter,
+            CURLOPT_POSTFIELDS => $jsonString,
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+
+        $dataJson = curl_exec($cURL_descriptor);
+        $data = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $responseCode = curl_getinfo($cURL_descriptor, CURLINFO_RESPONSE_CODE);
+
+        curl_close($cURL_descriptor);
+
+        if ($responseCode >= 400) {
+            throw new BillingUnavailableException();
+        }
+
+        return $data;
+    }
+
+    public function createCourse(string $token, array $dataNewCourse)
+    {
+        $cURL_descriptor = curl_init(URL_COURSES);
+
+        if ($cURL_descriptor === false) {
+            throw new CurlException();
+        }
+
+        $parameter = [];
+        $parameter[] = 'Content-Type: application/json';
+        $parameter[] = 'Authorization: Bearer ' . $token;
+
+        $json = $dataNewCourse;
+
+        $jsonString = json_encode($json, JSON_THROW_ON_ERROR);
+
+        curl_setopt_array($cURL_descriptor, [
+            CURLOPT_HTTPHEADER => $parameter,
+            CURLOPT_POSTFIELDS => $jsonString,
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+
+        $dataJson = curl_exec($cURL_descriptor);
+        $data = json_decode($dataJson, true, 512, JSON_THROW_ON_ERROR);
+
+        $responseCode = curl_getinfo($cURL_descriptor, CURLINFO_RESPONSE_CODE);
+
+        curl_close($cURL_descriptor);
+
+        if ($responseCode >= 400) {
+            throw new BillingUnavailableException();
+        }
+
+        return $data;
+    }
 }

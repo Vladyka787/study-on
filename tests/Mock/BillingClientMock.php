@@ -353,7 +353,10 @@ class BillingClientMock extends BillingClient
             ];
         }
 
-        if ((($token == TOKEN_USER) || ($token == TOKEN_ADMIN) || ($token == TOKEN_NEW_USER)) && ($characterCode == CHARACTER_CODE_BEG)) {
+        if ((($token == TOKEN_USER) ||
+                ($token == TOKEN_ADMIN) ||
+                ($token == TOKEN_NEW_USER)) &&
+            ($characterCode == CHARACTER_CODE_BEG)) {
             $until = new \DateTime("now", new \DateTimeZone('UTC'));
             $until->modify('+7 day');
 
@@ -364,7 +367,10 @@ class BillingClientMock extends BillingClient
             ];
         }
 
-        if ((($token == TOKEN_USER) || ($token == TOKEN_ADMIN) || ($token == TOKEN_NEW_USER)) && ($characterCode == CHARACTER_CODE_PLAVANIYU)) {
+        if ((($token == TOKEN_USER) ||
+                ($token == TOKEN_ADMIN) ||
+                ($token == TOKEN_NEW_USER)) &&
+            ($characterCode == CHARACTER_CODE_PLAVANIYU)) {
             $until = new \DateTime("now", new \DateTimeZone('UTC'));
             $until->modify('+7 day');
 
@@ -409,5 +415,57 @@ class BillingClientMock extends BillingClient
         }
 
         return [];
+    }
+
+    public function createCourse(string $token, array $dataNewCourse)
+    {
+        $service = new GenerateJWTFromTests();
+        $username = $service->getUsername($token);
+
+        if ($username == USERNAME_ADMIN) {
+            if ($dataNewCourse['code'] == 'new_test_course') {
+                return ['success' => true];
+            } else {
+                return [
+                    'code' => 406,
+                    'message' => 'Код курса должен быть уникальным'
+                ];
+            }
+        } else {
+            return [
+                'code' => 403,
+                'message' => 'Отказано в доступе'
+            ];
+        }
+    }
+
+    public function editCourse(string $token, string $characterCode, array $dataEditCourse)
+    {
+        $service = new GenerateJWTFromTests();
+        $username = $service->getUsername($token);
+
+        if ($characterCode == 'kursy_po_strizhke') {
+            if ($username == USERNAME_ADMIN) {
+                if ($dataEditCourse['code'] == 'edit_test_course') {
+                    return ['success' => true];
+                } else {
+                    return [
+                        'code' => 406,
+                        'message' => 'Код курса должен быть уникальным'
+                    ];
+                }
+            } else {
+                return [
+                    'code' => 403,
+                    'message' => 'Отказано в доступе'
+                ];
+            }
+        } else {
+            return [
+                'code' => 406,
+                'message' => 'Некорректный код курса'
+            ];
+        }
+
     }
 }
