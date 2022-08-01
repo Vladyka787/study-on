@@ -321,8 +321,6 @@ class CourseControllerTest extends Tests\AbstractTest
         $this->assertTrue($form->has('course[CourseDescription]'));
         $this->assertTrue($form->has('course[Type]'));
         $this->assertTrue($form->has('course[Price]'));
-
-        
     }
 
     public function testPrintPriceAndRentEndAndRentBeginCourse()
